@@ -37,14 +37,14 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ name: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const { name } = await params;
+  const { id } = await params;
 
   await connectToDB();
   const updates = await req.json();
   const updated = await Player.findOneAndUpdate(
-    { playerName: name },
+    { _id: id },
     { $set: updates },
     { new: true }
   ).lean();

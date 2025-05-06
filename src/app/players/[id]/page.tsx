@@ -12,11 +12,12 @@ import {
   CardFooter,
   CardAction,
 } from '@/components/ui/card';
+import { PlayerForm } from '@/app/interfaces/PlayerForm';
 
 const playerFetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Page() {
-  // grab `id` from the URL instead of `name`
+  // grab `id` from the URL
   const { id: rawId } = useParams() as { id: string };
   const id = decodeURIComponent(rawId);
 
@@ -26,8 +27,22 @@ export default function Page() {
     playerFetcher
   );
 
+  // form holds all the raw counting stats
+  const [form, setForm] = useState<PlayerForm>({
+    games: 0,
+    atBat: 0,
+    runs: 0,
+    hits: 0,
+    doubles: 0,
+    thirdBaseman: 0,
+    homeRun: 0,
+    runBattedIn: 0,
+    walks: 0,
+    strikeouts: 0,
+    stolenBases: 0,
+    caughtStealing: 0,
+  });
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ hits: 0, homeRun: 0 });
 
   if (error) return <p className="text-red-600">Failed to load player.</p>;
   if (!player)
@@ -38,7 +53,20 @@ export default function Page() {
     );
 
   const startEdit = () => {
-    setForm({ hits: player.hits, homeRun: player.homeRun });
+    setForm({
+      games: player.games,
+      atBat: player.atBat,
+      runs: player.runs,
+      hits: player.hits,
+      doubles: player.doubles,
+      thirdBaseman: player.thirdBaseman,
+      homeRun: player.homeRun,
+      runBattedIn: player.runBattedIn,
+      walks: player.walks,
+      strikeouts: player.strikeouts,
+      stolenBases: player.stolenBases,
+      caughtStealing: player.caughtStealing,
+    });
     setEditing(true);
   };
 
@@ -49,9 +77,24 @@ export default function Page() {
       body: JSON.stringify(form),
     });
     setEditing(false);
-    // revalidate the SWR cache for this id
     mutate(`/api/players/${rawId}`);
   };
+
+  // list out editable fields as keys of PlayerForm
+  const editableFields: { label: string; field: keyof PlayerForm }[] = [
+    { label: 'Games', field: 'games' },
+    { label: 'At Bats', field: 'atBat' },
+    { label: 'Runs', field: 'runs' },
+    { label: 'Hits', field: 'hits' },
+    { label: 'Doubles', field: 'doubles' },
+    { label: 'Triples', field: 'thirdBaseman' },
+    { label: 'Home Runs', field: 'homeRun' },
+    { label: 'RBI', field: 'runBattedIn' },
+    { label: 'Walks', field: 'walks' },
+    { label: 'Strikeouts', field: 'strikeouts' },
+    { label: 'Stolen Bases', field: 'stolenBases' },
+    { label: 'Caught Stealing', field: 'caughtStealing' },
+  ];
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -75,30 +118,24 @@ export default function Page() {
 
         <CardContent>
           {editing ? (
-            <>
-              <div className="mb-4">
-                <label className="block mb-1">Hits</label>
-                <input
-                  type="number"
-                  value={form.hits}
-                  onChange={e =>
-                    setForm(f => ({ ...f, hits: Number(e.target.value) }))
-                  }
-                  className="border p-2 rounded w-full"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1">Home Runs</label>
-                <input
-                  type="number"
-                  value={form.homeRun}
-                  onChange={e =>
-                    setForm(f => ({ ...f, homeRun: Number(e.target.value) }))
-                  }
-                  className="border p-2 rounded w-full"
-                />
-              </div>
-            </>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {editableFields.map(({ label, field }) => (
+                <div key={field} className="mb-2">
+                  <label className="block mb-1">{label}</label>
+                  <input
+                    type="number"
+                    value={form[field]}
+                    onChange={e =>
+                      setForm(prev => ({
+                        ...prev,
+                        [field]: Number(e.target.value),
+                      }))
+                    }
+                    className="border p-2 rounded w-full"
+                  />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="flex flex-wrap gap-3">
               {[

@@ -5,7 +5,7 @@ import Player from '../../models/PlayerModel';
 export async function GET() {
   await connectToDB();
   const players = await Player.find()
-    .sort({ hits: -1 })
+    .sort({ homeRun: -1 })
     .lean();
   return NextResponse.json(players);
 }
